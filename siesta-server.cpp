@@ -5,8 +5,8 @@
 char *board[14] = {
 	"++++++++++++++",
 	"+............+",
-	"+.*r_........+",
-	"+............+",
+	"+.*r_.r*.....+",
+	"+...bbr......+",
 	"+............+",
 	"+............+",
 	"+............+",
@@ -141,7 +141,7 @@ void SkipRoofs(Present *p) {
 }
 
 void AddPointsFrom(int PointCt, Present *p, Points *pts) {
-	while (at() == '-') {
+	while (at() == '_') {
 		PointCt++;
 		step();
 	}
@@ -329,6 +329,17 @@ void RoofFindSiesta(char dir, int x, int y, Present *pres, Points *p) {
 		return;
 	}
 
+	cursor->x = x;
+	cursor->y = y;
+	reverse();
+
+	step();
+	SkipRoofs(&tpres);
+
+	if (at() != '_') {
+		return;
+	}
+
 	AddPointsFrom(0, &tpres, p);
 }
 
@@ -450,6 +461,12 @@ void UpdateEdgeLists() {
 
 void main()
 {
+	Present p;
+	p.blu = true;
+
 	UpdateEdgeLists();
+	thispiece->red = 0;
+	thispiece->blu = 0;
+	FindRoofPoints(5, 2, thispiece, &p);
 }
 
