@@ -155,6 +155,7 @@ void AddPointsFrom(int PointCt, Present *p, Points *pts) {
 
 bool ShaFindSiesta(char dir, int x, int y, Points *p) {
 	Present pres;
+
 	cursor->dir = dir;
 	cursor->x = x;
 	cursor->y = y;
@@ -242,6 +243,7 @@ void FindShaPoints(int x, int y, Points *p) {
 
 void SunFindSiesta(char dir, int x, int y, Points *p) {
 	Present pres;
+
 	cursor->dir = dir;
 	cursor->x = x;
 	cursor->y = y;
@@ -257,7 +259,8 @@ void SunFindSiesta(char dir, int x, int y, Points *p) {
 }
 
 bool FindSunDouble(char dir, int x, int y, Present *pres) {
-	Points *p = new Points;
+	Points p;
+
 	cursor->dir = dir;
 	cursor->x = x;
 	cursor->y = y;
@@ -269,7 +272,7 @@ bool FindSunDouble(char dir, int x, int y, Present *pres) {
 		return false;
 	}
 
-	AddPointsFrom(0, pres, p);
+	AddPointsFrom(0, pres, &p);
 
 	SkipRoofs(pres);
 
@@ -307,6 +310,91 @@ void FindSunPoints(int x, int y, Points *p) {
 	pres.blu = false;
 	if (FindSunDouble('s', x, y, &pres)) {
 		bonuspts(&pres);
+	}
+}
+
+void RoofFindSiesta(char dir, int x, int y, Present *pres, Points *p) {
+	Present tpres;
+
+	cursor->dir = dir;
+	cursor->x = x;
+	cursor->y = y;
+	tpres.red = pres->red;
+	tpres.blu = pres->blu;
+	
+	step();
+	SkipRoofs(&tpres);
+
+	if (at() != '*') {
+		return;
+	}
+
+	AddPointsFrom(0, &tpres, p);
+}
+
+bool FindRoofDouble(char dir, int x, int y, Present *pres) {
+	Points p;
+
+	cursor->dir = dir;
+	cursor->x = x;
+	cursor->y = y;
+
+	step();
+	SkipRoofs(pres);
+
+	if ((pres->red && pres->blu) || (at() != '*')) {
+		return false;
+	}
+
+	cursor->x = x;
+	cursor->y = y;
+	reverse();
+
+	step();
+	SkipRoofs(pres);
+
+	if ((pres->red && pres->blu) || (at() != '_')) {
+		return false;
+	}
+
+	AddPointsFrom(0, pres, &p);
+
+	SkipRoofs(pres);
+
+	if ((pres->red && pres->blu) || (at() != '*')) {
+		return false;
+	}
+
+	return true;
+}
+
+void FindRoofPoints(int x, int y, Points *p, Present *pres) {
+	Present tpres;
+	
+	RoofFindSiesta('n', x, y, pres, p);
+	RoofFindSiesta('e', x, y, pres, p);
+	RoofFindSiesta('w', x, y, pres, p);
+	RoofFindSiesta('s', x, y, pres, p);
+
+	tpres.red = pres->red;
+	tpres.blu = pres->blu;
+	if (FindRoofDouble('n', x, y, &tpres)) {
+		bonuspts(&tpres);
+	}
+	tpres.red = pres->red;
+	tpres.blu = pres->blu;
+	if (FindRoofDouble('e', x, y, &tpres)) {
+		bonuspts(&tpres);
+	}
+	tpres.red = pres->red;
+	tpres.blu = pres->blu;
+	if (FindRoofDouble('w', x, y, &tpres)) {
+		bonuspts(&tpres);
+	}
+	tpres.red = pres->red;
+	tpres.blu = pres->blu;
+	if (FindRoofDouble('s', x, y, &tpres)) {
+		bonuspts(&tpres);
 	}
 }
 
@@ -352,7 +440,7 @@ void UpdateEdgeLists() {
 	while (iter->next) {
 		int x = iter->x;
 		int y = iter->y;
-		if (HasNoAdj('*', x, y)) {
+		if (HasNoAdj('_', x, y)) {
 			SunEdgeList = SunEdgeList->Append(new PointList(x, y));
 		}
 		iter = iter->next;
