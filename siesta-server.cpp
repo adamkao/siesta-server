@@ -77,6 +77,28 @@ Points::Points() {
 	this->blu = 0;
 }
 
+class Move {
+public:
+	Move();
+	int scoredelta;
+	char p1;
+	int el1;
+	char p2;
+	int el2;
+	char p3;
+	int el3;
+};
+
+Move::Move() {
+	this->scoredelta = 0;
+	this->p1 = '_';
+	this->el1 = 0;
+	this->p2 = 'r';
+	this->el2 = 0;
+	this->p3 = '*';
+	this->el3 = 0;
+}
+
 PointList *EdgeList = nullptr;
 PointList *SunEdgeList = nullptr;
 PointList *ShaEdgeList = nullptr;
@@ -458,6 +480,11 @@ void UpdateEdgeLists() {
 	}
 }
 
+void DoCompMove() {
+	int i, j, k, x, y;
+	Move CandidateMove;
+	Move NewCandidateMove;
+}
 
 void main()
 {
