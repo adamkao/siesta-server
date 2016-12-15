@@ -546,8 +546,9 @@ void UpdateEdgeLists() {
 				ShaFindSiesta('e', x, y, &pts) ||
 				ShaFindSiesta('w', x, y, &pts) ||
 				ShaFindSiesta('s', x, y, &pts)
-				);
-			ShaEdgeList = ShaEdgeList->Append(new PointList(x, y));
+				) {
+				ShaEdgeList = ShaEdgeList->Append(new PointList(x, y));
+			}
 		}
 		iter = iter->next;
 	}
