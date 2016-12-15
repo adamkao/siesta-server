@@ -6,16 +6,16 @@
 char *StartingBoard[14] = {
 	"++++++++++++++",
 	"+............+",
-	"+.*r_.r*.....+",
+	"+.*r_.r***...+",
 	"+...bbr......+",
-	"+............+",
-	"+............+",
-	"+............+",
-	"+............+",
-	"+............+",
-	"+............+",
-	"+............+",
-	"+............+",
+	"+....*r..*...+",
+	"+....*b.*b...+",
+	"+._bb*b_b....+",
+	"+.....*br_...+",
+	"+.r.....*r...+",
+	"+.b......*...+",
+	"+.**.....*...+",
+	"+..bbbrrr*...+",
 	"+............+",
 	"++++++++++++++"
 };
@@ -595,7 +595,6 @@ void DoCompMove(GameHistory *g) {
 		thispiece.blu = p.blu;
 		NewCandidateMove.p1 = 'r';
 		NewCandidateMove.el1 = i;
-		printf("%d r (%d, %d): r %d, b %d\n", i, x, y, thispiece.red, thispiece.blu);
 
 		tree = tree->Push(tree);
 		tree->board[y][x] = 'r';
@@ -611,12 +610,36 @@ void DoCompMove(GameHistory *g) {
 			thispiece.blu = p.blu;
 			NewCandidateMove.p2 = '*';
 			NewCandidateMove.el2 = j;
-			printf("%d %d * (%d, %d): r %d, b %d\n", i, j, x, y, thispiece.red, thispiece.blu);
 
 			tree = tree->Push(tree);
 			tree->board[y][x] = '*';
-			tree->ShowBoard();
 			UpdateEdgeLists(tree);
+
+			for (k = 0, kiter = tree->EL; kiter->next; k++, kiter = kiter->next) {
+				int x = kiter->x;
+				int y = kiter->y;
+				Points p;
+				Present pres;
+				pres.red = true;
+
+				FindRoofPoints(tree, x, y, &p, &pres);
+				thispiece.red = p.red;
+				thispiece.blu = p.blu;
+				NewCandidateMove.p3 = 'r';
+				NewCandidateMove.el3 = k;
+			}
+
+			for (k = 0, kiter = tree->sunEL; kiter->next; k++, kiter = kiter->next) {
+				int x = kiter->x;
+				int y = kiter->y;
+				Points p;
+
+				FindSunPoints(tree, x, y, &p);
+				thispiece.red = p.red;
+				thispiece.blu = p.blu;
+				NewCandidateMove.p3 = '*';
+				NewCandidateMove.el3 = k;
+			}
 
 			for (k = 0, kiter = tree->shaEL; kiter->next; k++, kiter = kiter->next) {
 				int x = kiter->x;
@@ -628,7 +651,6 @@ void DoCompMove(GameHistory *g) {
 				thispiece.blu = p.blu;
 				NewCandidateMove.p3 = '_';
 				NewCandidateMove.el3 = k;
-				printf("%d %d %d _ (%d, %d): r %d, b %d\n", i, j, k, x, y, thispiece.red, thispiece.blu);
 			}
 
 			tree = tree->Pop();
