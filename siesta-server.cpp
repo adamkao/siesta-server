@@ -50,6 +50,7 @@ public:
 	GameHistory();
 	GameHistory *Push(GameHistory *gh);
 	GameHistory *Pop();
+	void ShowBoard();
 };
 
 GameHistory::GameHistory() {
@@ -78,7 +79,7 @@ GameHistory *GameHistory::Push(GameHistory *gh) {
 
 	for (int i = 0; i < 14; i++) {
 		char *row = (char *)malloc(15 * sizeof(char));
-		strcpy_s(row, 14, gh->board[i]);
+		strcpy_s(row, 15, gh->board[i]);
 		ghnew->board[i] = row;
 	}
 	ghnew->next = gh;
@@ -89,14 +90,25 @@ GameHistory *GameHistory::Push(GameHistory *gh) {
 GameHistory *GameHistory::Pop() {
 	GameHistory *next = this->next;
 
-	for (int i = 0; i < 14; i++) {
-		free(this->board[i]);
-		free(this);
-	}
-
 	return next;
 }
 
+void GameHistory::ShowBoard() {
+	printf("%s\n", this->board[0]);
+	printf("%s\n", this->board[1]);
+	printf("%s\n", this->board[2]);
+	printf("%s\n", this->board[3]);
+	printf("%s\n", this->board[4]);
+	printf("%s\n", this->board[5]);
+	printf("%s\n", this->board[6]);
+	printf("%s\n", this->board[7]);
+	printf("%s\n", this->board[8]);
+	printf("%s\n", this->board[9]);
+	printf("%s\n", this->board[10]);
+	printf("%s\n", this->board[11]);
+	printf("%s\n", this->board[12]);
+	printf("%s\n", this->board[13]);
+}
 class Cursor {
 public:
 	Cursor();
@@ -487,14 +499,14 @@ void FindRoofPoints(int x, int y, Points *p, Present *pres) {
 	}
 }
 
-bool HasPieceAdj(int x, int y) {
+bool HasPieceAdj(GameHistory *g, int x, int y) {
 	if ((x < 1) || (x > 12) || (y < 1) || (y > 12)) {
 		return false;
 	}
-	char n = Game->board[y - 1][x];
-	char e = Game->board[y][x + 1];
-	char w = Game->board[y][x - 1];
-	char s = Game->board[y + 1][x];
+	char n = g->board[y - 1][x];
+	char e = g->board[y][x + 1];
+	char w = g->board[y][x - 1];
+	char s = g->board[y + 1][x];
 
 	return (
 		((n != '.') && (n != '+')) ||
@@ -504,12 +516,12 @@ bool HasPieceAdj(int x, int y) {
 		);
 }
 
-bool HasNoAdj(char type, int x, int y) {
+bool HasNoAdj(GameHistory *g, char type, int x, int y) {
 	return (
-		(Game->board[y - 1][x] != type) &&
-		(Game->board[y][x + 1] != type) &&
-		(Game->board[y][x - 1] != type) &&
-		(Game->board[y + 1][x] != type)
+		(g->board[y - 1][x] != type) &&
+		(g->board[y][x + 1] != type) &&
+		(g->board[y][x - 1] != type) &&
+		(g->board[y + 1][x] != type)
 		);
 }
 
@@ -522,7 +534,7 @@ void UpdateEdgeLists(GameHistory *g) {
 
 	for (int y = 1; y < 13; y++) {
 		for (int x = 1; x < 13; x++) {
-			if ((Game->board[y][x] == '.') && HasPieceAdj(x, y)) {
+			if ((g->board[y][x] == '.') && HasPieceAdj(g, x, y)) {
 				EdgeList = EdgeList->Append(new PointList(x, y));
 			}
 		}
@@ -531,7 +543,7 @@ void UpdateEdgeLists(GameHistory *g) {
 	while (iter->next) {
 		int x = iter->x;
 		int y = iter->y;
-		if (HasNoAdj('_', x, y)) {
+		if (HasNoAdj(g, '_', x, y)) {
 			SunEdgeList = SunEdgeList->Append(new PointList(x, y));
 		}
 		iter = iter->next;
@@ -540,7 +552,7 @@ void UpdateEdgeLists(GameHistory *g) {
 	while (iter->next) {
 		int x = iter->x;
 		int y = iter->y;
-		if (HasNoAdj('*', x, y)) {
+		if (HasNoAdj(g, '*', x, y)) {
 			if (
 				ShaFindSiesta('n', x, y, &pts) ||
 				ShaFindSiesta('e', x, y, &pts) ||
@@ -562,8 +574,10 @@ void DoCompMove() {
 	GameHistory *tree = Game;
 	Move CandidateMove;
 	Move NewCandidateMove;
-	Points thismove;
+	Points thismove, thispiece;
 
+	thismove.red = 0;
+	thismove.blu = 0;
 	int i = 0;
 	PointList *iiter = nullptr;
 	int j = 0;
@@ -571,7 +585,7 @@ void DoCompMove() {
 	int k = 0;
 	PointList *kiter = nullptr;
 
-	for (i = 0, iiter = Game->EL; iiter->next; i++, iiter = iiter->next) {
+	for (i = 0, iiter = tree->EL; iiter->next; i++, iiter = iiter->next) {
 		int x = iiter->x;
 		int y = iiter->y;
 		Points p;
@@ -579,43 +593,50 @@ void DoCompMove() {
 		pres.red = true;
 
 		FindRoofPoints(x, y, &p, &pres);
-		thismove.red = p.red;
-		thismove.blu = p.blu;
+		thispiece.red = p.red;
+		thispiece.blu = p.blu;
 		NewCandidateMove.p1 = 'r';
 		NewCandidateMove.el1 = i;
+		printf("%d r (%d, %d): r %d, b %d\n", i, x, y, thismove.red, thismove.blu);
+
 		tree = tree->Push(tree);
 		tree->board[y][x] = 'r';
 		UpdateEdgeLists(tree);
 
-		for (j = 0, jiter = Game->sunEL; jiter->next; j++, jiter = jiter->next) {
+		for (j = 0, jiter = tree->sunEL; jiter->next; j++, jiter = jiter->next) {
 			int x = jiter->x;
 			int y = jiter->y;
 			Points p;
 
 			FindSunPoints(x, y, &p);
-			thismove.red += p.red;
-			thismove.blu += p.blu;
+			thispiece.red = p.red;
+			thispiece.blu = p.blu;
 			NewCandidateMove.p2 = '*';
 			NewCandidateMove.el2 = j;
+			printf("%d * (%d, %d): r %d, b %d\n", j, x, y, thismove.red, thismove.blu);
+
 			tree = tree->Push(tree);
 			tree->board[y][x] = '*';
+			tree->ShowBoard();
 			UpdateEdgeLists(tree);
 
-			for (k = 0, kiter = Game->shaEL; kiter->next; k++, kiter = kiter->next) {
+			for (k = 0, kiter = tree->shaEL; kiter->next; k++, kiter = kiter->next) {
 				int x = kiter->x;
 				int y = kiter->y;
 				Points p;
 
 				FindShaPoints(x, y, &p);
-				thismove.red += p.red;
-				thismove.blu += p.blu;
-				NewCandidateMove.p2 = '_';
-				NewCandidateMove.el2 = k;
-				tree = tree->Push(tree);
-				tree->board[y][x] = '_';
-				UpdateEdgeLists(tree);
+				thispiece.red = p.red;
+				thispiece.blu = p.blu;
+				NewCandidateMove.p3 = '_';
+				NewCandidateMove.el3 = k;
+				printf("%d _ (%d, %d): r %d, b %d\n", k, x, y, thismove.red, thismove.blu);
 			}
+
+			tree = tree->Pop();
 		}
+
+		tree = tree->Pop();
 	}
 }
 
@@ -625,8 +646,6 @@ void main()
 	p.blu = true;
 
 	UpdateEdgeLists(Game);
-	thispiece->red = 0;
-	thispiece->blu = 0;
-	FindRoofPoints(5, 2, thispiece, &p);
+	DoCompMove();
 }
 
