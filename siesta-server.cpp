@@ -586,6 +586,36 @@ void DoCompMove() {
 		tree = tree->Push(tree);
 		tree->board[y][x] = 'r';
 		UpdateEdgeLists(tree);
+
+		for (j = 0, jiter = Game->EL; jiter->next; j++, jiter = jiter->next) {
+			int x = jiter->x;
+			int y = jiter->y;
+			Points p;
+
+			FindSunPoints(x, y, &p);
+			thismove.red += p.red;
+			thismove.blu += p.blu;
+			NewCandidateMove.p2 = '*';
+			NewCandidateMove.el2 = j;
+			tree = tree->Push(tree);
+			tree->board[y][x] = '*';
+			UpdateEdgeLists(tree);
+
+			for (k = 0, kiter = Game->EL; kiter->next; k++, kiter = kiter->next) {
+				int x = kiter->x;
+				int y = kiter->y;
+				Points p;
+
+				FindShaPoints(x, y, &p);
+				thismove.red += p.red;
+				thismove.blu += p.blu;
+				NewCandidateMove.p2 = '_';
+				NewCandidateMove.el2 = k;
+				tree = tree->Push(tree);
+				tree->board[y][x] = '_';
+				UpdateEdgeLists(tree);
+			}
+		}
 	}
 }
 
