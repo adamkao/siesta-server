@@ -590,12 +590,12 @@ void DoCompMove(GameHistory *g) {
 		Present pres;
 		pres.red = true;
 
-		FindRoofPoints(g, x, y, &p, &pres);
+		FindRoofPoints(tree, x, y, &p, &pres);
 		thispiece.red = p.red;
 		thispiece.blu = p.blu;
 		NewCandidateMove.p1 = 'r';
 		NewCandidateMove.el1 = i;
-		printf("%d r (%d, %d): r %d, b %d\n", i, x, y, thismove.red, thismove.blu);
+		printf("%d r (%d, %d): r %d, b %d\n", i, x, y, thispiece.red, thispiece.blu);
 
 		tree = tree->Push(tree);
 		tree->board[y][x] = 'r';
@@ -606,12 +606,12 @@ void DoCompMove(GameHistory *g) {
 			int y = jiter->y;
 			Points p;
 
-			FindSunPoints(g, x, y, &p);
+			FindSunPoints(tree, x, y, &p);
 			thispiece.red = p.red;
 			thispiece.blu = p.blu;
 			NewCandidateMove.p2 = '*';
 			NewCandidateMove.el2 = j;
-			printf("%d * (%d, %d): r %d, b %d\n", j, x, y, thismove.red, thismove.blu);
+			printf("%d %d * (%d, %d): r %d, b %d\n", i, j, x, y, thispiece.red, thispiece.blu);
 
 			tree = tree->Push(tree);
 			tree->board[y][x] = '*';
@@ -623,12 +623,12 @@ void DoCompMove(GameHistory *g) {
 				int y = kiter->y;
 				Points p;
 
-				FindShaPoints(g, x, y, &p);
+				FindShaPoints(tree, x, y, &p);
 				thispiece.red = p.red;
 				thispiece.blu = p.blu;
 				NewCandidateMove.p3 = '_';
 				NewCandidateMove.el3 = k;
-				printf("%d _ (%d, %d): r %d, b %d\n", k, x, y, thismove.red, thismove.blu);
+				printf("%d %d %d _ (%d, %d): r %d, b %d\n", i, j, k, x, y, thispiece.red, thispiece.blu);
 			}
 
 			tree = tree->Pop();
