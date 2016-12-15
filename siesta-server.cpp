@@ -513,7 +513,7 @@ bool HasNoAdj(char type, int x, int y) {
 		);
 }
 
-void UpdateEdgeLists() {
+void UpdateEdgeLists(GameHistory *g) {
 	Points pts;
 	PointList *iter = nullptr;
 	PointList *EdgeList = new PointList(0, 0);
@@ -553,9 +553,9 @@ void UpdateEdgeLists() {
 		iter = iter->next;
 	}
 
-	Game->EL = EdgeList;
-	Game->sunEL = SunEdgeList;
-	Game->shaEL = ShaEdgeList;
+	g->EL = EdgeList;
+	g->sunEL = SunEdgeList;
+	g->shaEL = ShaEdgeList;
 }
 
 void DoCompMove() {
@@ -585,6 +585,7 @@ void DoCompMove() {
 		NewCandidateMove.el1 = i;
 		tree = tree->Push(tree);
 		tree->board[y][x] = 'r';
+		UpdateEdgeLists(tree);
 	}
 }
 
@@ -593,7 +594,7 @@ void main()
 	Present p;
 	p.blu = true;
 
-	UpdateEdgeLists();
+	UpdateEdgeLists(Game);
 	thispiece->red = 0;
 	thispiece->blu = 0;
 	FindRoofPoints(5, 2, thispiece, &p);
