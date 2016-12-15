@@ -587,7 +587,7 @@ void DoCompMove() {
 		tree->board[y][x] = 'r';
 		UpdateEdgeLists(tree);
 
-		for (j = 0, jiter = Game->EL; jiter->next; j++, jiter = jiter->next) {
+		for (j = 0, jiter = Game->sunEL; jiter->next; j++, jiter = jiter->next) {
 			int x = jiter->x;
 			int y = jiter->y;
 			Points p;
@@ -601,7 +601,7 @@ void DoCompMove() {
 			tree->board[y][x] = '*';
 			UpdateEdgeLists(tree);
 
-			for (k = 0, kiter = Game->EL; kiter->next; k++, kiter = kiter->next) {
+			for (k = 0, kiter = Game->shaEL; kiter->next; k++, kiter = kiter->next) {
 				int x = kiter->x;
 				int y = kiter->y;
 				Points p;
