@@ -22,11 +22,11 @@ char *StartingBoard[14] = {
 
 class PointList {
 public:
+	PointList(int x, int y);
+	PointList *Append(PointList *next);
 	int x;
 	int y;
 	PointList *next;
-	PointList(int x, int y);
-	PointList *Append(PointList *next);
 };
 
 PointList::PointList(int x, int y) {
@@ -514,6 +514,8 @@ bool HasNoAdj(char type, int x, int y) {
 }
 
 void UpdateEdgeLists() {
+	Points pts;
+	PointList *iter = nullptr;
 	PointList *EdgeList = new PointList(0, 0);
 	PointList *SunEdgeList = new PointList(0, 0);
 	PointList *ShaEdgeList = new PointList(0, 0);
@@ -525,7 +527,7 @@ void UpdateEdgeLists() {
 			}
 		}
 	}
-	PointList *iter = EdgeList;
+	iter = EdgeList;
 	while (iter->next) {
 		int x = iter->x;
 		int y = iter->y;
@@ -534,6 +536,22 @@ void UpdateEdgeLists() {
 		}
 		iter = iter->next;
 	}
+	iter = EdgeList;
+	while (iter->next) {
+		int x = iter->x;
+		int y = iter->y;
+		if (HasNoAdj('*', x, y)) {
+			if (
+				ShaFindSiesta('n', x, y, &pts) ||
+				ShaFindSiesta('e', x, y, &pts) ||
+				ShaFindSiesta('w', x, y, &pts) ||
+				ShaFindSiesta('s', x, y, &pts)
+				);
+			ShaEdgeList = ShaEdgeList->Append(new PointList(x, y));
+		}
+		iter = iter->next;
+	}
+
 	Game->EL = EdgeList;
 	Game->sunEL = SunEdgeList;
 	Game->shaEL = ShaEdgeList;
