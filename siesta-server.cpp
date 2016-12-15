@@ -559,15 +559,32 @@ void UpdateEdgeLists() {
 }
 
 void DoCompMove() {
+	GameHistory *tree = Game;
 	Move CandidateMove;
 	Move NewCandidateMove;
-	PointList *iter;
+	Points thismove;
 
 	int i = 0;
-	iter = Game->EL;
+	PointList *iiter = nullptr;
+	int j = 0;
+	PointList *jiter = nullptr;
+	int k = 0;
+	PointList *kiter = nullptr;
 
-	while (iter->next) {
+	for (i = 0, iiter = Game->EL; iiter->next; i++, iiter = iiter->next) {
+		int x = iiter->x;
+		int y = iiter->y;
+		Points p;
+		Present pres;
+		pres.red = true;
 
+		FindRoofPoints(x, y, &p, &pres);
+		thismove.red = p.red;
+		thismove.blu = p.blu;
+		NewCandidateMove.p1 = 'r';
+		NewCandidateMove.el1 = i;
+		tree = tree->Push(tree);
+		tree->board[y][x] = 'r';
 	}
 }
 
