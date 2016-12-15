@@ -1,8 +1,9 @@
 #include "stdafx.h"
 #include <iostream>
 #include <string>
+#include <stdlib.h>
 
-char *board[14] = {
+char *StartingBoard[14] = {
 	"++++++++++++++",
 	"+............+",
 	"+.*r_.r*.....+",
@@ -37,6 +38,63 @@ PointList::PointList(int x, int y) {
 PointList *PointList::Append(PointList *newPt) {
 	newPt->next = this;
 	return newPt;
+}
+
+class GameHistory {
+public:
+	char *board[14];
+	PointList *EL;
+	PointList *sunEL;
+	PointList *shaEL;
+	GameHistory *next;
+	GameHistory();
+	GameHistory *Push(GameHistory *gh);
+	GameHistory *Pop();
+};
+
+GameHistory::GameHistory() {
+	this->board[0] = StartingBoard[0];
+	this->board[1] = StartingBoard[1];
+	this->board[2] = StartingBoard[2];
+	this->board[3] = StartingBoard[3];
+	this->board[4] = StartingBoard[4];
+	this->board[5] = StartingBoard[5];
+	this->board[6] = StartingBoard[6];
+	this->board[7] = StartingBoard[7];
+	this->board[8] = StartingBoard[8];
+	this->board[9] = StartingBoard[9];
+	this->board[10] = StartingBoard[10];
+	this->board[11] = StartingBoard[11];
+	this->board[12] = StartingBoard[12];
+	this->board[13] = StartingBoard[13];
+	this->EL = nullptr;
+	this->sunEL = nullptr;
+	this->shaEL = nullptr;
+	this->next = nullptr;
+}
+
+GameHistory *GameHistory::Push(GameHistory *gh) {
+	GameHistory *ghnew = new GameHistory;
+
+	for (int i = 0; i < 14; i++) {
+		char *row = (char *)malloc(15 * sizeof(char));
+		strcpy_s(row, 14, gh->board[i]);
+		ghnew->board[i] = row;
+	}
+	ghnew->next = gh;
+
+	return ghnew;
+}
+
+GameHistory *GameHistory::Pop() {
+	GameHistory *next = this->next;
+
+	for (int i = 0; i < 14; i++) {
+		free(this->board[i]);
+		free(this);
+	}
+
+	return next;
 }
 
 class Cursor {
@@ -91,25 +149,23 @@ public:
 
 Move::Move() {
 	this->scoredelta = 0;
-	this->p1 = '_';
+	this->p1 = 'r';
 	this->el1 = 0;
-	this->p2 = 'r';
+	this->p2 = '*';
 	this->el2 = 0;
-	this->p3 = '*';
+	this->p3 = '_';
 	this->el3 = 0;
 }
-
-PointList *EdgeList = nullptr;
-PointList *SunEdgeList = nullptr;
-PointList *ShaEdgeList = nullptr;
 
 Cursor *cursor = new Cursor;
 
 Points *thispiece = new Points;
 Points *thismove = new Points;
 
+GameHistory *Game = new GameHistory;
+
 char at() {
-	return board[cursor->y][cursor->x];
+	return Game->board[cursor->y][cursor->x];
 }
 
 void step() {
@@ -435,10 +491,10 @@ bool HasPieceAdj(int x, int y) {
 	if ((x < 1) || (x > 12) || (y < 1) || (y > 12)) {
 		return false;
 	}
-	char n = board[y - 1][x];
-	char e = board[y][x + 1];
-	char w = board[y][x - 1];
-	char s = board[y + 1][x];
+	char n = Game->board[y - 1][x];
+	char e = Game->board[y][x + 1];
+	char w = Game->board[y][x - 1];
+	char s = Game->board[y + 1][x];
 
 	return (
 		((n != '.') && (n != '+')) ||
@@ -450,21 +506,21 @@ bool HasPieceAdj(int x, int y) {
 
 bool HasNoAdj(char type, int x, int y) {
 	return (
-		(board[y - 1][x] != type) &&
-		(board[y][x + 1] != type) &&
-		(board[y][x - 1] != type) &&
-		(board[y + 1][x] != type)
+		(Game->board[y - 1][x] != type) &&
+		(Game->board[y][x + 1] != type) &&
+		(Game->board[y][x - 1] != type) &&
+		(Game->board[y + 1][x] != type)
 		);
 }
 
 void UpdateEdgeLists() {
-	EdgeList = new PointList(0, 0);
-	SunEdgeList = new PointList(0, 0);
-	ShaEdgeList = new PointList(0, 0);
+	PointList *EdgeList = new PointList(0, 0);
+	PointList *SunEdgeList = new PointList(0, 0);
+	PointList *ShaEdgeList = new PointList(0, 0);
 
 	for (int y = 1; y < 13; y++) {
 		for (int x = 1; x < 13; x++) {
-			if ((board[y][x] == '.') && HasPieceAdj(x, y)) {
+			if ((Game->board[y][x] == '.') && HasPieceAdj(x, y)) {
 				EdgeList = EdgeList->Append(new PointList(x, y));
 			}
 		}
@@ -478,12 +534,22 @@ void UpdateEdgeLists() {
 		}
 		iter = iter->next;
 	}
+	Game->EL = EdgeList;
+	Game->sunEL = SunEdgeList;
+	Game->shaEL = ShaEdgeList;
 }
 
 void DoCompMove() {
-	int i, j, k, x, y;
 	Move CandidateMove;
 	Move NewCandidateMove;
+	PointList *iter;
+
+	int i = 0;
+	iter = Game->EL;
+
+	while (iter->next) {
+
+	}
 }
 
 void main()
