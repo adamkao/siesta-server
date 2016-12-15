@@ -174,10 +174,8 @@ Cursor *cursor = new Cursor;
 Points *thispiece = new Points;
 Points *thismove = new Points;
 
-GameHistory *Game = new GameHistory;
-
-char at() {
-	return Game->board[cursor->y][cursor->x];
+char at(GameHistory *g) {
+	return g->board[cursor->y][cursor->x];
 }
 
 void step() {
@@ -218,20 +216,20 @@ void bonuspts(Present *p) {
 		thispiece->blu += 2;
 	}
 }
-void SkipRoofs(Present *p) {
-	while ((at() == 'r') || (at() == 'b')) {
-		if (at() == 'r') {
+void SkipRoofs(GameHistory *g, Present *p) {
+	while ((at(g) == 'r') || (at(g) == 'b')) {
+		if (at(g) == 'r') {
 			p->red = true;
 		}
-		else if (at() == 'b') {
+		else if (at(g) == 'b') {
 			p->blu = true;
 		}
 		step();
 	}
 }
 
-void AddPointsFrom(int PointCt, Present *p, Points *pts) {
-	while (at() == '_') {
+void AddPointsFrom(GameHistory *g, int PointCt, Present *p, Points *pts) {
+	while (at(g) == '_') {
 		PointCt++;
 		step();
 	}
@@ -243,7 +241,7 @@ void AddPointsFrom(int PointCt, Present *p, Points *pts) {
 	}
 }
 
-bool ShaFindSiesta(char dir, int x, int y, Points *p) {
+bool ShaFindSiesta(GameHistory *g, char dir, int x, int y, Points *p) {
 	Present pres;
 
 	cursor->dir = dir;
@@ -252,41 +250,41 @@ bool ShaFindSiesta(char dir, int x, int y, Points *p) {
 
 	do {
 		step();
-	} while (at() == '_');
+	} while (at(g) == '_');
 
-	if ((at() != 'r') && (at() != 'b')) {
+	if ((at(g) != 'r') && (at(g) != 'b')) {
 		return false;
 	}
 
-	SkipRoofs(&pres);
+	SkipRoofs(g, &pres);
 
-	if (at() == '*') {
+	if (at(g) == '*') {
 		cursor->x = x;
 		cursor->y = y;
 		reverse();
 		step();
-		AddPointsFrom(1, &pres, p);
+		AddPointsFrom(g, 1, &pres, p);
 		return true;
 	}
 	return false;
 }
 
-bool FindShaDouble(char dir, int x, int y, Present *pres) {
+bool FindShaDouble(GameHistory *g, char dir, int x, int y, Present *pres) {
 	cursor->dir = dir;
 	cursor->x = x;
 	cursor->y = y;
 
 	do {
 		step();
-	} while (at() == '_');
+	} while (at(g) == '_');
 
-	if ((at() != 'r') && (at() != 'b')) {
+	if ((at(g) != 'r') && (at(g) != 'b')) {
 		return false;
 	}
 
-	SkipRoofs(pres);
+	SkipRoofs(g, pres);
 
-	if (((pres->red) && (pres->blu)) || at() != '*') {
+	if (((pres->red) && (pres->blu)) || at(g) != '*') {
 		return false;
 	}
 
@@ -296,42 +294,42 @@ bool FindShaDouble(char dir, int x, int y, Present *pres) {
 
 	do {
 		step();
-	} while (at() == '_');
+	} while (at(g) == '_');
 
-	if ((at() != 'r') && (at() != 'b')) {
+	if ((at(g) != 'r') && (at(g) != 'b')) {
 		return false;
 	}
 
-	SkipRoofs(pres);
+	SkipRoofs(g, pres);
 
-	if (((pres->red) && (pres->blu)) || at() != '*') {
+	if (((pres->red) && (pres->blu)) || at(g) != '*') {
 		return false;
 	}
 
 	return true;
 }
 
-void FindShaPoints(int x, int y, Points *p) {
+void FindShaPoints(GameHistory *g, int x, int y, Points *p) {
 	Present pres;
 
-	ShaFindSiesta('n', x, y, p);
-	ShaFindSiesta('e', x, y, p);
-	ShaFindSiesta('w', x, y, p);
-	ShaFindSiesta('s', x, y, p);
+	ShaFindSiesta(g, 'n', x, y, p);
+	ShaFindSiesta(g, 'e', x, y, p);
+	ShaFindSiesta(g, 'w', x, y, p);
+	ShaFindSiesta(g, 's', x, y, p);
 
 	pres.red = false;
 	pres.blu = false;
-	if (FindShaDouble('n', x, y, &pres)) {
+	if (FindShaDouble(g, 'n', x, y, &pres)) {
 		bonuspts(&pres);
 	}
 	pres.red = false;
 	pres.blu = false;
-	if (FindShaDouble('e', x, y, &pres)) {
+	if (FindShaDouble(g, 'e', x, y, &pres)) {
 		bonuspts(&pres);
 	}
 }
 
-void SunFindSiesta(char dir, int x, int y, Points *p) {
+void SunFindSiesta(GameHistory *g, char dir, int x, int y, Points *p) {
 	Present pres;
 
 	cursor->dir = dir;
@@ -339,16 +337,16 @@ void SunFindSiesta(char dir, int x, int y, Points *p) {
 	cursor->y = y;
 
 	step();
-	SkipRoofs(&pres);
+	SkipRoofs(g, &pres);
 
-	if (at() != '_') {
+	if (at(g) != '_') {
 		return;
 	}
 
-	AddPointsFrom(0, &pres, p);
+	AddPointsFrom(g, 0, &pres, p);
 }
 
-bool FindSunDouble(char dir, int x, int y, Present *pres) {
+bool FindSunDouble(GameHistory *g, char dir, int x, int y, Present *pres) {
 	Points p;
 
 	cursor->dir = dir;
@@ -356,54 +354,54 @@ bool FindSunDouble(char dir, int x, int y, Present *pres) {
 	cursor->y = y;
 
 	step();
-	SkipRoofs(pres);
+	SkipRoofs(g, pres);
 
-	if (((pres->red) && (pres->blu)) || (at() != '_')) {
+	if (((pres->red) && (pres->blu)) || (at(g) != '_')) {
 		return false;
 	}
 
-	AddPointsFrom(0, pres, &p);
+	AddPointsFrom(g, 0, pres, &p);
 
-	SkipRoofs(pres);
+	SkipRoofs(g, pres);
 
-	if (((pres->red) && (pres->blu)) || (at() != '*')) {
+	if (((pres->red) && (pres->blu)) || (at(g) != '*')) {
 		return false;
 	}
 
 	return true;
 }
 
-void FindSunPoints(int x, int y, Points *p) {
+void FindSunPoints(GameHistory *g, int x, int y, Points *p) {
 	Present pres;
 
-	SunFindSiesta('n', x, y, p);
-	SunFindSiesta('e', x, y, p);
-	SunFindSiesta('w', x, y, p);
-	SunFindSiesta('s', x, y, p);
+	SunFindSiesta(g, 'n', x, y, p);
+	SunFindSiesta(g, 'e', x, y, p);
+	SunFindSiesta(g, 'w', x, y, p);
+	SunFindSiesta(g, 's', x, y, p);
 
 	pres.red = false;
 	pres.blu = false;
-	if (FindSunDouble('n', x, y, &pres)) {
+	if (FindSunDouble(g, 'n', x, y, &pres)) {
 		bonuspts(&pres);
 	}
 	pres.red = false;
 	pres.blu = false;
-	if (FindSunDouble('e', x, y, &pres)) {
+	if (FindSunDouble(g, 'e', x, y, &pres)) {
 		bonuspts(&pres);
 	}
 	pres.red = false;
 	pres.blu = false;
-	if (FindSunDouble('w', x, y, &pres)) {
+	if (FindSunDouble(g, 'w', x, y, &pres)) {
 		bonuspts(&pres);
 	}
 	pres.red = false;
 	pres.blu = false;
-	if (FindSunDouble('s', x, y, &pres)) {
+	if (FindSunDouble(g, 's', x, y, &pres)) {
 		bonuspts(&pres);
 	}
 }
 
-void RoofFindSiesta(char dir, int x, int y, Present *pres, Points *p) {
+void RoofFindSiesta(GameHistory *g, char dir, int x, int y, Present *pres, Points *p) {
 	Present tpres;
 
 	cursor->dir = dir;
@@ -413,9 +411,9 @@ void RoofFindSiesta(char dir, int x, int y, Present *pres, Points *p) {
 	tpres.blu = pres->blu;
 	
 	step();
-	SkipRoofs(&tpres);
+	SkipRoofs(g, &tpres);
 
-	if (at() != '*') {
+	if (at(g) != '*') {
 		return;
 	}
 
@@ -424,16 +422,16 @@ void RoofFindSiesta(char dir, int x, int y, Present *pres, Points *p) {
 	reverse();
 
 	step();
-	SkipRoofs(&tpres);
+	SkipRoofs(g, &tpres);
 
-	if (at() != '_') {
+	if (at(g) != '_') {
 		return;
 	}
 
-	AddPointsFrom(0, &tpres, p);
+	AddPointsFrom(g, 0, &tpres, p);
 }
 
-bool FindRoofDouble(char dir, int x, int y, Present *pres) {
+bool FindRoofDouble(GameHistory *g, char dir, int x, int y, Present *pres) {
 	Points p;
 
 	cursor->dir = dir;
@@ -441,9 +439,9 @@ bool FindRoofDouble(char dir, int x, int y, Present *pres) {
 	cursor->y = y;
 
 	step();
-	SkipRoofs(pres);
+	SkipRoofs(g, pres);
 
-	if ((pres->red && pres->blu) || (at() != '*')) {
+	if ((pres->red && pres->blu) || (at(g) != '*')) {
 		return false;
 	}
 
@@ -452,49 +450,49 @@ bool FindRoofDouble(char dir, int x, int y, Present *pres) {
 	reverse();
 
 	step();
-	SkipRoofs(pres);
+	SkipRoofs(g, pres);
 
-	if ((pres->red && pres->blu) || (at() != '_')) {
+	if ((pres->red && pres->blu) || (at(g) != '_')) {
 		return false;
 	}
 
-	AddPointsFrom(0, pres, &p);
+	AddPointsFrom(g, 0, pres, &p);
 
-	SkipRoofs(pres);
+	SkipRoofs(g, pres);
 
-	if ((pres->red && pres->blu) || (at() != '*')) {
+	if ((pres->red && pres->blu) || (at(g) != '*')) {
 		return false;
 	}
 
 	return true;
 }
 
-void FindRoofPoints(int x, int y, Points *p, Present *pres) {
+void FindRoofPoints(GameHistory *g, int x, int y, Points *p, Present *pres) {
 	Present tpres;
 	
-	RoofFindSiesta('n', x, y, pres, p);
-	RoofFindSiesta('e', x, y, pres, p);
-	RoofFindSiesta('w', x, y, pres, p);
-	RoofFindSiesta('s', x, y, pres, p);
+	RoofFindSiesta(g, 'n', x, y, pres, p);
+	RoofFindSiesta(g, 'e', x, y, pres, p);
+	RoofFindSiesta(g, 'w', x, y, pres, p);
+	RoofFindSiesta(g, 's', x, y, pres, p);
 
 	tpres.red = pres->red;
 	tpres.blu = pres->blu;
-	if (FindRoofDouble('n', x, y, &tpres)) {
+	if (FindRoofDouble(g, 'n', x, y, &tpres)) {
 		bonuspts(&tpres);
 	}
 	tpres.red = pres->red;
 	tpres.blu = pres->blu;
-	if (FindRoofDouble('e', x, y, &tpres)) {
+	if (FindRoofDouble(g, 'e', x, y, &tpres)) {
 		bonuspts(&tpres);
 	}
 	tpres.red = pres->red;
 	tpres.blu = pres->blu;
-	if (FindRoofDouble('w', x, y, &tpres)) {
+	if (FindRoofDouble(g, 'w', x, y, &tpres)) {
 		bonuspts(&tpres);
 	}
 	tpres.red = pres->red;
 	tpres.blu = pres->blu;
-	if (FindRoofDouble('s', x, y, &tpres)) {
+	if (FindRoofDouble(g, 's', x, y, &tpres)) {
 		bonuspts(&tpres);
 	}
 }
@@ -554,10 +552,10 @@ void UpdateEdgeLists(GameHistory *g) {
 		int y = iter->y;
 		if (HasNoAdj(g, '*', x, y)) {
 			if (
-				ShaFindSiesta('n', x, y, &pts) ||
-				ShaFindSiesta('e', x, y, &pts) ||
-				ShaFindSiesta('w', x, y, &pts) ||
-				ShaFindSiesta('s', x, y, &pts)
+				ShaFindSiesta(g, 'n', x, y, &pts) ||
+				ShaFindSiesta(g, 'e', x, y, &pts) ||
+				ShaFindSiesta(g, 'w', x, y, &pts) ||
+				ShaFindSiesta(g, 's', x, y, &pts)
 				) {
 				ShaEdgeList = ShaEdgeList->Append(new PointList(x, y));
 			}
@@ -570,8 +568,8 @@ void UpdateEdgeLists(GameHistory *g) {
 	g->shaEL = ShaEdgeList;
 }
 
-void DoCompMove() {
-	GameHistory *tree = Game;
+void DoCompMove(GameHistory *g) {
+	GameHistory *tree = g;
 	Move CandidateMove;
 	Move NewCandidateMove;
 	Points thismove, thispiece;
@@ -592,7 +590,7 @@ void DoCompMove() {
 		Present pres;
 		pres.red = true;
 
-		FindRoofPoints(x, y, &p, &pres);
+		FindRoofPoints(g, x, y, &p, &pres);
 		thispiece.red = p.red;
 		thispiece.blu = p.blu;
 		NewCandidateMove.p1 = 'r';
@@ -608,7 +606,7 @@ void DoCompMove() {
 			int y = jiter->y;
 			Points p;
 
-			FindSunPoints(x, y, &p);
+			FindSunPoints(g, x, y, &p);
 			thispiece.red = p.red;
 			thispiece.blu = p.blu;
 			NewCandidateMove.p2 = '*';
@@ -625,7 +623,7 @@ void DoCompMove() {
 				int y = kiter->y;
 				Points p;
 
-				FindShaPoints(x, y, &p);
+				FindShaPoints(g, x, y, &p);
 				thispiece.red = p.red;
 				thispiece.blu = p.blu;
 				NewCandidateMove.p3 = '_';
@@ -642,10 +640,11 @@ void DoCompMove() {
 
 void main()
 {
+	GameHistory *g = new GameHistory;
 	Present p;
 	p.blu = true;
 
-	UpdateEdgeLists(Game);
-	DoCompMove();
+	UpdateEdgeLists(g);
+	DoCompMove(g);
 }
 
