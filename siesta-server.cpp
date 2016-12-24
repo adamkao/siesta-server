@@ -568,14 +568,184 @@ void UpdateEdgeLists(GameHistory *g) {
 	g->shaEL = ShaEdgeList;
 }
 
+void CheckP3Roofs(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove, Points *p1pts, Points *p2pts) {
+	int k = 0;
+	PointList *kiter = nullptr;
+	Points p3pts;
+
+	for (k = 0, kiter = tree->EL; kiter->next; k++, kiter = kiter->next) {
+		int x = kiter->x;
+		int y = kiter->y;
+		Present pres;
+		pres.blu = false;
+		pres.red = true;
+
+		p3pts.red = 0;
+		p3pts.blu = 0;
+		FindRoofPoints(tree, x, y, &p3pts, &pres);
+
+		int scoredelta = (p1pts->red + p2pts->red + p3pts.red) - (p1pts->blu + p2pts->blu + p3pts.blu);
+
+		if (scoredelta > CandidateMove->scoredelta) {
+			CandidateMove->p1 = NewCandidateMove->p1;
+			CandidateMove->el1 = NewCandidateMove->el1;
+			CandidateMove->p2 = NewCandidateMove->p2;
+			CandidateMove->el2 = NewCandidateMove->el2;
+			CandidateMove->p3 = 'r';
+			CandidateMove->el3 = k;
+			CandidateMove->scoredelta = scoredelta;
+		}
+	}
+}
+
+void CheckP3Suns(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove, Points *p1pts, Points *p2pts) {
+	int k = 0;
+	PointList *kiter = nullptr;
+	Points p3pts;
+
+	for (k = 0, kiter = tree->sunEL; kiter->next; k++, kiter = kiter->next) {
+		int x = kiter->x;
+		int y = kiter->y;
+
+		p3pts.red = 0;
+		p3pts.blu = 0;
+		FindSunPoints(tree, x, y, &p3pts);
+
+		int scoredelta = (p1pts->red + p2pts->red + p3pts.red) - (p1pts->blu + p2pts->blu + p3pts.blu);
+
+		if (scoredelta > CandidateMove->scoredelta) {
+			CandidateMove->p1 = NewCandidateMove->p1;
+			CandidateMove->el1 = NewCandidateMove->el1;
+			CandidateMove->p2 = NewCandidateMove->p2;
+			CandidateMove->el2 = NewCandidateMove->el2;
+			CandidateMove->p3 = '*';
+			CandidateMove->el3 = k;
+			CandidateMove->scoredelta = scoredelta;
+		}
+	}
+}
+
+void CheckP3Shas(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove, Points *p1pts, Points *p2pts) {
+	int k = 0;
+	PointList *kiter = nullptr;
+	Points p3pts;
+
+	for (k = 0, kiter = tree->shaEL; kiter->next; k++, kiter = kiter->next) {
+		int x = kiter->x;
+		int y = kiter->y;
+
+		p3pts.red = 0;
+		p3pts.blu = 0;
+		FindShaPoints(tree, x, y, &p3pts);
+
+		int scoredelta = (p1pts->red + p2pts->red + p3pts.red) - (p1pts->blu + p2pts->blu + p3pts.blu);
+
+		if (scoredelta > CandidateMove->scoredelta) {
+			CandidateMove->p1 = NewCandidateMove->p1;
+			CandidateMove->el1 = NewCandidateMove->el1;
+			CandidateMove->p2 = NewCandidateMove->p2;
+			CandidateMove->el2 = NewCandidateMove->el2;
+			CandidateMove->p3 = '_';
+			CandidateMove->el3 = k;
+			CandidateMove->scoredelta = scoredelta;
+		}
+	}
+}
+
+
+void CheckP2Roofs(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove, Points *p1pts) {
+	int j = 0;
+	PointList *jiter = nullptr;
+	Points p2pts;
+
+	NewCandidateMove->p2 = 'r';
+	for (j = 0, jiter = tree->EL; jiter->next; j++, jiter = jiter->next) {
+		int x = jiter->x;
+		int y = jiter->y;
+		Present pres;
+		pres.blu = false;
+		pres.red = true;
+
+		NewCandidateMove->el2 = j;
+
+		p2pts.red = 0;
+		p2pts.blu = 0;
+		FindRoofPoints(tree, x, y, &p2pts, &pres);
+
+		tree = tree->Push(tree);
+		tree->board[y][x] = 'r';
+		UpdateEdgeLists(tree);
+
+		CheckP3Roofs(tree, CandidateMove, NewCandidateMove, p1pts, &p2pts);
+		CheckP3Suns(tree, CandidateMove, NewCandidateMove, p1pts, &p2pts);
+		CheckP3Shas(tree, CandidateMove, NewCandidateMove, p1pts, &p2pts);
+
+		tree = tree->Pop();
+	}
+}
+
+void CheckP2Suns(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove, int i, PointList *iiter, Points *p1pts) {
+	int j = 0;
+	PointList *jiter = nullptr;
+	Points p2pts;
+
+	NewCandidateMove->p2 = '*';
+	for (j = 0, jiter = tree->sunEL; jiter->next; j++, jiter = jiter->next) {
+		int x = jiter->x;
+		int y = jiter->y;
+
+		NewCandidateMove->el2 = j;
+
+		p2pts.red = 0;
+		p2pts.blu = 0;
+		FindSunPoints(tree, x, y, &p2pts);
+
+		tree = tree->Push(tree);
+		tree->board[y][x] = '*';
+		UpdateEdgeLists(tree);
+
+		CheckP3Roofs(tree, CandidateMove, NewCandidateMove, p1pts, &p2pts);
+		CheckP3Suns(tree, CandidateMove, NewCandidateMove, p1pts, &p2pts);
+		CheckP3Shas(tree, CandidateMove, NewCandidateMove, p1pts, &p2pts);
+
+		tree = tree->Pop();
+	}
+}
+
+void CheckP2Shas(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove, int i, PointList *iiter, Points *p1pts) {
+	int j = 0;
+	PointList *jiter = nullptr;
+	Points p2pts;
+
+	NewCandidateMove->p2 = '_';
+	for (j = 0, jiter = tree->shaEL; jiter->next; j++, jiter = jiter->next) {
+		int x = jiter->x;
+		int y = jiter->y;
+
+		NewCandidateMove->el2 = j;
+
+		p2pts.red = 0;
+		p2pts.blu = 0;
+		FindShaPoints(tree, x, y, &p2pts);
+
+		tree = tree->Push(tree);
+		tree->board[y][x] = '_';
+		UpdateEdgeLists(tree);
+
+		CheckP3Roofs(tree, CandidateMove, NewCandidateMove, p1pts, &p2pts);
+		CheckP3Suns(tree, CandidateMove, NewCandidateMove, p1pts, &p2pts);
+		CheckP3Shas(tree, CandidateMove, NewCandidateMove, p1pts, &p2pts);
+
+		tree = tree->Pop();
+	}
+}
+
 void DoCompMove(GameHistory *g) {
 	GameHistory *tree = g;
 	Move CandidateMove;
 	Move NewCandidateMove;
-	Points thismove, thispiece;
+	Points p1pts, p2pts, p3pts, thismove;
 
-	thismove.red = 0;
-	thismove.blu = 0;
 	int i = 0;
 	PointList *iiter = nullptr;
 	int j = 0;
@@ -583,16 +753,18 @@ void DoCompMove(GameHistory *g) {
 	int k = 0;
 	PointList *kiter = nullptr;
 
+	CandidateMove.scoredelta = 0;
+
 	for (i = 0, iiter = tree->EL; iiter->next; i++, iiter = iiter->next) {
 		int x = iiter->x;
 		int y = iiter->y;
-		Points p;
 		Present pres;
 		pres.red = true;
 
-		FindRoofPoints(tree, x, y, &p, &pres);
-		thispiece.red = p.red;
-		thispiece.blu = p.blu;
+		p1pts.red = 0;
+		p1pts.blu = 0;
+		FindRoofPoints(tree, x, y, &p1pts, &pres);
+
 		NewCandidateMove.p1 = 'r';
 		NewCandidateMove.el1 = i;
 
@@ -600,72 +772,15 @@ void DoCompMove(GameHistory *g) {
 		tree->board[y][x] = 'r';
 		UpdateEdgeLists(tree);
 
-		for (j = 0, jiter = tree->EL; jiter->next; j++, jiter = jiter->next) {
-			int x = jiter->x;
-			int y = jiter->y;
-			Points p;
-			Present pres;
-			pres.red = true;
-
-			FindRoofPoints(tree, x, y, &p, &pres);
-			thispiece.red = p.red;
-			thispiece.blu = p.blu;
-			NewCandidateMove.p2 = 'r';
-			NewCandidateMove.el2 = j;
-
-			tree = tree->Push(tree);
-			tree->board[y][x] = 'r';
-			UpdateEdgeLists(tree);
-
-			for (k = 0, kiter = tree->EL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-				Present pres;
-				pres.red = true;
-
-				FindRoofPoints(tree, x, y, &p, &pres);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = 'r';
-				NewCandidateMove.el3 = k;
-			}
-
-			for (k = 0, kiter = tree->sunEL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-
-				FindSunPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '*';
-				NewCandidateMove.el3 = k;
-			}
-
-			for (k = 0, kiter = tree->shaEL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-
-				FindShaPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '_';
-				NewCandidateMove.el3 = k;
-			}
-
-			tree = tree->Pop();
-		}
 
 		for (j = 0, jiter = tree->sunEL; jiter->next; j++, jiter = jiter->next) {
 			int x = jiter->x;
 			int y = jiter->y;
-			Points p;
 
-			FindSunPoints(tree, x, y, &p);
-			thispiece.red = p.red;
-			thispiece.blu = p.blu;
+			p2pts.red = 0;
+			p2pts.blu = 0;
+			FindSunPoints(tree, x, y, &p2pts);
+
 			NewCandidateMove.p2 = '*';
 			NewCandidateMove.el2 = j;
 
@@ -676,15 +791,27 @@ void DoCompMove(GameHistory *g) {
 			for (k = 0, kiter = tree->EL; kiter->next; k++, kiter = kiter->next) {
 				int x = kiter->x;
 				int y = kiter->y;
-				Points p;
 				Present pres;
 				pres.red = true;
 
-				FindRoofPoints(tree, x, y, &p, &pres);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = 'r';
-				NewCandidateMove.el3 = k;
+				p3pts.red = 0;
+				p3pts.blu = 0;
+				FindRoofPoints(tree, x, y, &p3pts, &pres);
+
+				thismove.red = p1pts.red + p2pts.red + p3pts.red;
+				thismove.blu = p1pts.blu + p2pts.blu + p3pts.blu;
+
+				int scoredelta = thismove.red - thismove.blu;
+
+				if (scoredelta > CandidateMove.scoredelta) {
+					CandidateMove.p1 = NewCandidateMove.p1;
+					CandidateMove.el1 = i;
+					CandidateMove.p2 = NewCandidateMove.p2;
+					CandidateMove.el3 = j;
+					CandidateMove.p3 = 'r';
+					CandidateMove.el3 = k;
+					CandidateMove.scoredelta = scoredelta;
+				}
 			}
 
 			for (k = 0, kiter = tree->sunEL; kiter->next; k++, kiter = kiter->next) {
@@ -692,11 +819,24 @@ void DoCompMove(GameHistory *g) {
 				int y = kiter->y;
 				Points p;
 
-				FindSunPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '*';
-				NewCandidateMove.el3 = k;
+				p3pts.red = 0;
+				p3pts.blu = 0;
+				FindSunPoints(tree, x, y, &p3pts);
+
+				thismove.red = p1pts.red + p2pts.red + p3pts.red;
+				thismove.blu = p1pts.blu + p2pts.blu + p3pts.blu;
+
+				int scoredelta = thismove.red - thismove.blu;
+
+				if (scoredelta > CandidateMove.scoredelta) {
+					CandidateMove.p1 = NewCandidateMove.p1;
+					CandidateMove.el1 = i;
+					CandidateMove.p2 = NewCandidateMove.p2;
+					CandidateMove.el3 = j;
+					CandidateMove.p3 = '*';
+					CandidateMove.el3 = k;
+					CandidateMove.scoredelta = scoredelta;
+				}
 			}
 
 			for (k = 0, kiter = tree->shaEL; kiter->next; k++, kiter = kiter->next) {
@@ -704,11 +844,24 @@ void DoCompMove(GameHistory *g) {
 				int y = kiter->y;
 				Points p;
 
-				FindShaPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '_';
-				NewCandidateMove.el3 = k;
+				p3pts.red = 0;
+				p3pts.blu = 0;
+				FindShaPoints(tree, x, y, &p3pts);
+
+				thismove.red = p1pts.red + p2pts.red + p3pts.red;
+				thismove.blu = p1pts.blu + p2pts.blu + p3pts.blu;
+
+				int scoredelta = thismove.red - thismove.blu;
+
+				if (scoredelta > CandidateMove.scoredelta) {
+					CandidateMove.p1 = NewCandidateMove.p1;
+					CandidateMove.el1 = i;
+					CandidateMove.p2 = NewCandidateMove.p2;
+					CandidateMove.el3 = j;
+					CandidateMove.p3 = '_';
+					CandidateMove.el3 = k;
+					CandidateMove.scoredelta = scoredelta;
+				}
 			}
 
 			tree = tree->Pop();
@@ -719,9 +872,10 @@ void DoCompMove(GameHistory *g) {
 			int y = jiter->y;
 			Points p;
 
-			FindShaPoints(tree, x, y, &p);
-			thispiece.red = p.red;
-			thispiece.blu = p.blu;
+			p2pts.red = 0;
+			p2pts.blu = 0;
+			FindShaPoints(tree, x, y, &p2pts);
+
 			NewCandidateMove.p2 = '_';
 			NewCandidateMove.el2 = j;
 
@@ -732,15 +886,27 @@ void DoCompMove(GameHistory *g) {
 			for (k = 0, kiter = tree->EL; kiter->next; k++, kiter = kiter->next) {
 				int x = kiter->x;
 				int y = kiter->y;
-				Points p;
 				Present pres;
 				pres.red = true;
 
-				FindRoofPoints(tree, x, y, &p, &pres);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = 'r';
-				NewCandidateMove.el3 = k;
+				p3pts.red = 0;
+				p3pts.blu = 0;
+				FindRoofPoints(tree, x, y, &p3pts, &pres);
+
+				thismove.red = p1pts.red + p2pts.red + p3pts.red;
+				thismove.blu = p1pts.blu + p2pts.blu + p3pts.blu;
+
+				int scoredelta = thismove.red - thismove.blu;
+
+				if (scoredelta > CandidateMove.scoredelta) {
+					CandidateMove.p1 = NewCandidateMove.p1;
+					CandidateMove.el1 = i;
+					CandidateMove.p2 = NewCandidateMove.p2;
+					CandidateMove.el3 = j;
+					CandidateMove.p3 = 'r';
+					CandidateMove.el3 = k;
+					CandidateMove.scoredelta = scoredelta;
+				}
 			}
 
 			for (k = 0, kiter = tree->sunEL; kiter->next; k++, kiter = kiter->next) {
@@ -748,11 +914,24 @@ void DoCompMove(GameHistory *g) {
 				int y = kiter->y;
 				Points p;
 
-				FindSunPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '*';
-				NewCandidateMove.el3 = k;
+				p3pts.red = 0;
+				p3pts.blu = 0;
+				FindSunPoints(tree, x, y, &p3pts);
+
+				thismove.red = p1pts.red + p2pts.red + p3pts.red;
+				thismove.blu = p1pts.blu + p2pts.blu + p3pts.blu;
+
+				int scoredelta = thismove.red - thismove.blu;
+
+				if (scoredelta > CandidateMove.scoredelta) {
+					CandidateMove.p1 = NewCandidateMove.p1;
+					CandidateMove.el1 = i;
+					CandidateMove.p2 = NewCandidateMove.p2;
+					CandidateMove.el3 = j;
+					CandidateMove.p3 = '*';
+					CandidateMove.el3 = k;
+					CandidateMove.scoredelta = scoredelta;
+				}
 			}
 
 			for (k = 0, kiter = tree->shaEL; kiter->next; k++, kiter = kiter->next) {
@@ -760,393 +939,275 @@ void DoCompMove(GameHistory *g) {
 				int y = kiter->y;
 				Points p;
 
-				FindShaPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '_';
-				NewCandidateMove.el3 = k;
+				p3pts.red = 0;
+				p3pts.blu = 0;
+				FindShaPoints(tree, x, y, &p3pts);
+
+				thismove.red = p1pts.red + p2pts.red + p3pts.red;
+				thismove.blu = p1pts.blu + p2pts.blu + p3pts.blu;
+
+				int scoredelta = thismove.red - thismove.blu;
+
+				if (scoredelta > CandidateMove.scoredelta) {
+					CandidateMove.p1 = NewCandidateMove.p1;
+					CandidateMove.el1 = i;
+					CandidateMove.p2 = NewCandidateMove.p2;
+					CandidateMove.el3 = j;
+					CandidateMove.p3 = '_';
+					CandidateMove.el3 = k;
+					CandidateMove.scoredelta = scoredelta;
+				}
 			}
 
 			tree = tree->Pop();
 		}
 
-		tree = tree->Pop();
-	}
-
-	for (i = 0, iiter = tree->sunEL; iiter->next; i++, iiter = iiter->next) {
-		int x = iiter->x;
-		int y = iiter->y;
-		Points p;
-
-		FindSunPoints(tree, x, y, &p);
-		thispiece.red = p.red;
-		thispiece.blu = p.blu;
-		NewCandidateMove.p1 = 'r';
-		NewCandidateMove.el1 = i;
-
-		tree = tree->Push(tree);
-		tree->board[y][x] = '*';
-		UpdateEdgeLists(tree);
-
-		for (j = 0, jiter = tree->sunEL; jiter->next; j++, jiter = jiter->next) {
-			int x = jiter->x;
-			int y = jiter->y;
-			Points p;
-			Present pres;
-			pres.red = true;
-
-			FindRoofPoints(tree, x, y, &p, &pres);
-			thispiece.red = p.red;
-			thispiece.blu = p.blu;
-			NewCandidateMove.p2 = 'r';
-			NewCandidateMove.el2 = j;
-
-			tree = tree->Push(tree);
-			tree->board[y][x] = 'r';
-			UpdateEdgeLists(tree);
-
-			for (k = 0, kiter = tree->EL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-				Present pres;
-				pres.red = true;
-
-				FindRoofPoints(tree, x, y, &p, &pres);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = 'r';
-				NewCandidateMove.el3 = k;
-			}
-
-			for (k = 0, kiter = tree->sunEL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-
-				FindSunPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '*';
-				NewCandidateMove.el3 = k;
-			}
-
-			for (k = 0, kiter = tree->shaEL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-
-				FindShaPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '_';
-				NewCandidateMove.el3 = k;
-			}
-
-			tree = tree->Pop();
-		}
-
-		for (j = 0, jiter = tree->sunEL; jiter->next; j++, jiter = jiter->next) {
-			int x = jiter->x;
-			int y = jiter->y;
+		for (i = 0, iiter = tree->sunEL; iiter->next; i++, iiter = iiter->next) {
+			int x = iiter->x;
+			int y = iiter->y;
 			Points p;
 
-			FindSunPoints(tree, x, y, &p);
-			thispiece.red = p.red;
-			thispiece.blu = p.blu;
-			NewCandidateMove.p2 = '*';
-			NewCandidateMove.el2 = j;
+			p1pts.red = 0;
+			p1pts.blu = 0;
+			FindSunPoints(tree, x, y, &p1pts);
+
+			NewCandidateMove.p1 = '*';
+			NewCandidateMove.el1 = i;
 
 			tree = tree->Push(tree);
 			tree->board[y][x] = '*';
 			UpdateEdgeLists(tree);
 
-			for (k = 0, kiter = tree->EL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-				Present pres;
-				pres.red = true;
 
-				FindRoofPoints(tree, x, y, &p, &pres);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = 'r';
-				NewCandidateMove.el3 = k;
-			}
-
-			for (k = 0, kiter = tree->sunEL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-
-				FindSunPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '*';
-				NewCandidateMove.el3 = k;
-			}
-
-			for (k = 0, kiter = tree->shaEL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-
-				FindShaPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '_';
-				NewCandidateMove.el3 = k;
-			}
-
-			tree = tree->Pop();
 		}
 
-		for (j = 0, jiter = tree->shaEL; jiter->next; j++, jiter = jiter->next) {
-			int x = jiter->x;
-			int y = jiter->y;
+		for (i = 0, iiter = tree->shaEL; iiter->next; i++, iiter = iiter->next) {
+			int x = iiter->x;
+			int y = iiter->y;
 			Points p;
 
-			FindShaPoints(tree, x, y, &p);
-			thispiece.red = p.red;
-			thispiece.blu = p.blu;
-			NewCandidateMove.p2 = '_';
-			NewCandidateMove.el2 = j;
+			p1pts.red = 0;
+			p1pts.blu = 0;
+			FindShaPoints(tree, x, y, &p1pts);
 
-			tree = tree->Push(tree);
-			tree->board[y][x] = '_';
-			UpdateEdgeLists(tree);
-
-			for (k = 0, kiter = tree->EL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-				Present pres;
-				pres.red = true;
-
-				FindRoofPoints(tree, x, y, &p, &pres);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = 'r';
-				NewCandidateMove.el3 = k;
-			}
-
-			for (k = 0, kiter = tree->sunEL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-
-				FindSunPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '*';
-				NewCandidateMove.el3 = k;
-			}
-
-			for (k = 0, kiter = tree->shaEL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-
-				FindShaPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '_';
-				NewCandidateMove.el3 = k;
-			}
-
-			tree = tree->Pop();
-		}
-
-		tree = tree->Pop();
-	}
-
-	for (i = 0, iiter = tree->shaEL; iiter->next; i++, iiter = iiter->next) {
-		int x = iiter->x;
-		int y = iiter->y;
-		Points p;
-
-		FindShaPoints(tree, x, y, &p);
-		thispiece.red = p.red;
-		thispiece.blu = p.blu;
-		NewCandidateMove.p1 = '_';
-		NewCandidateMove.el1 = i;
-
-		tree = tree->Push(tree);
-		tree->board[y][x] = 'r';
-		UpdateEdgeLists(tree);
-
-		for (j = 0, jiter = tree->sunEL; jiter->next; j++, jiter = jiter->next) {
-			int x = jiter->x;
-			int y = jiter->y;
-			Points p;
-			Present pres;
-			pres.red = true;
-
-			FindRoofPoints(tree, x, y, &p, &pres);
-			thispiece.red = p.red;
-			thispiece.blu = p.blu;
-			NewCandidateMove.p2 = 'r';
-			NewCandidateMove.el2 = j;
+			NewCandidateMove.p1 = '_';
+			NewCandidateMove.el1 = i;
 
 			tree = tree->Push(tree);
 			tree->board[y][x] = 'r';
 			UpdateEdgeLists(tree);
 
-			for (k = 0, kiter = tree->EL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
+			for (j = 0, jiter = tree->sunEL; jiter->next; j++, jiter = jiter->next) {
+				int x = jiter->x;
+				int y = jiter->y;
 				Points p;
 				Present pres;
 				pres.red = true;
 
-				FindRoofPoints(tree, x, y, &p, &pres);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = 'r';
-				NewCandidateMove.el3 = k;
+				p2pts.red = 0;
+				p2pts.blu = 0;
+				FindRoofPoints(tree, x, y, &p2pts, &pres);
+
+				NewCandidateMove.p2 = 'r';
+				NewCandidateMove.el2 = j;
+
+				tree = tree->Push(tree);
+				tree->board[y][x] = 'r';
+				UpdateEdgeLists(tree);
+
+				for (k = 0, kiter = tree->EL; kiter->next; k++, kiter = kiter->next) {
+					int x = kiter->x;
+					int y = kiter->y;
+					Points p;
+					Present pres;
+					pres.red = true;
+
+					p3pts.red = 0;
+					p3pts.blu = 0;
+					FindRoofPoints(tree, x, y, &p3pts, &pres);
+
+					thismove.red = p1pts.red + p2pts.red + p3pts.red;
+					thismove.blu = p1pts.blu + p2pts.blu + p3pts.blu;
+
+					NewCandidateMove.p3 = 'r';
+					NewCandidateMove.el3 = k;
+				}
+
+				for (k = 0, kiter = tree->sunEL; kiter->next; k++, kiter = kiter->next) {
+					int x = kiter->x;
+					int y = kiter->y;
+					Points p;
+
+					p3pts.red = 0;
+					p3pts.blu = 0;
+					FindSunPoints(tree, x, y, &p3pts);
+
+					thismove.red = p1pts.red + p2pts.red + p3pts.red;
+					thismove.blu = p1pts.blu + p2pts.blu + p3pts.blu;
+
+					NewCandidateMove.p3 = '*';
+					NewCandidateMove.el3 = k;
+				}
+
+				for (k = 0, kiter = tree->shaEL; kiter->next; k++, kiter = kiter->next) {
+					int x = kiter->x;
+					int y = kiter->y;
+					Points p;
+
+					p3pts.red = 0;
+					p3pts.blu = 0;
+					FindShaPoints(tree, x, y, &p3pts);
+
+					thismove.red = p1pts.red + p2pts.red + p3pts.red;
+					thismove.blu = p1pts.blu + p2pts.blu + p3pts.blu;
+
+					NewCandidateMove.p3 = '_';
+					NewCandidateMove.el3 = k;
+				}
+
+				tree = tree->Pop();
 			}
 
-			for (k = 0, kiter = tree->sunEL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
+			for (j = 0, jiter = tree->sunEL; jiter->next; j++, jiter = jiter->next) {
+				int x = jiter->x;
+				int y = jiter->y;
 				Points p;
 
-				FindSunPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '*';
-				NewCandidateMove.el3 = k;
+				p2pts.red = 0;
+				p2pts.blu = 0;
+				FindSunPoints(tree, x, y, &p2pts);
+
+				NewCandidateMove.p2 = '*';
+				NewCandidateMove.el2 = j;
+
+				tree = tree->Push(tree);
+				tree->board[y][x] = '*';
+				UpdateEdgeLists(tree);
+
+				for (k = 0, kiter = tree->EL; kiter->next; k++, kiter = kiter->next) {
+					int x = kiter->x;
+					int y = kiter->y;
+					Points p;
+					Present pres;
+					pres.red = true;
+
+					p3pts.red = 0;
+					p3pts.blu = 0;
+					FindRoofPoints(tree, x, y, &p3pts, &pres);
+
+					thismove.red = p1pts.red + p2pts.red + p3pts.red;
+					thismove.blu = p1pts.blu + p2pts.blu + p3pts.blu;
+
+					NewCandidateMove.p3 = 'r';
+					NewCandidateMove.el3 = k;
+				}
+
+				for (k = 0, kiter = tree->sunEL; kiter->next; k++, kiter = kiter->next) {
+					int x = kiter->x;
+					int y = kiter->y;
+					Points p;
+
+					p3pts.red = 0;
+					p3pts.blu = 0;
+					FindSunPoints(tree, x, y, &p3pts);
+
+					thismove.red = p1pts.red + p2pts.red + p3pts.red;
+					thismove.blu = p1pts.blu + p2pts.blu + p3pts.blu;
+
+					NewCandidateMove.p3 = '*';
+					NewCandidateMove.el3 = k;
+				}
+
+				for (k = 0, kiter = tree->shaEL; kiter->next; k++, kiter = kiter->next) {
+					int x = kiter->x;
+					int y = kiter->y;
+					Points p;
+
+					p3pts.red = 0;
+					p3pts.blu = 0;
+					FindShaPoints(tree, x, y, &p3pts);
+
+					thismove.red = p1pts.red + p2pts.red + p3pts.red;
+					thismove.blu = p1pts.blu + p2pts.blu + p3pts.blu;
+
+					NewCandidateMove.p3 = '_';
+					NewCandidateMove.el3 = k;
+				}
+
+				tree = tree->Pop();
 			}
 
-			for (k = 0, kiter = tree->shaEL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
+			for (j = 0, jiter = tree->shaEL; jiter->next; j++, jiter = jiter->next) {
+				int x = jiter->x;
+				int y = jiter->y;
 				Points p;
 
-				FindShaPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '_';
-				NewCandidateMove.el3 = k;
+				p2pts.red = 0;
+				p2pts.blu = 0;
+				FindShaPoints(tree, x, y, &p2pts);
+
+				NewCandidateMove.p2 = '_';
+				NewCandidateMove.el2 = j;
+
+				tree = tree->Push(tree);
+				tree->board[y][x] = '_';
+				UpdateEdgeLists(tree);
+
+				for (k = 0, kiter = tree->EL; kiter->next; k++, kiter = kiter->next) {
+					int x = kiter->x;
+					int y = kiter->y;
+					Points p;
+					Present pres;
+					pres.red = true;
+
+					p3pts.red = 0;
+					p3pts.blu = 0;
+					FindRoofPoints(tree, x, y, &p3pts, &pres);
+
+					thismove.red = p1pts.red + p2pts.red + p3pts.red;
+					thismove.blu = p1pts.blu + p2pts.blu + p3pts.blu;
+
+					NewCandidateMove.p3 = 'r';
+					NewCandidateMove.el3 = k;
+				}
+
+				for (k = 0, kiter = tree->sunEL; kiter->next; k++, kiter = kiter->next) {
+					int x = kiter->x;
+					int y = kiter->y;
+					Points p;
+
+					p3pts.red = 0;
+					p3pts.blu = 0;
+					FindSunPoints(tree, x, y, &p3pts);
+
+					thismove.red = p1pts.red + p2pts.red + p3pts.red;
+					thismove.blu = p1pts.blu + p2pts.blu + p3pts.blu;
+
+					NewCandidateMove.p3 = '*';
+					NewCandidateMove.el3 = k;
+				}
+
+				for (k = 0, kiter = tree->shaEL; kiter->next; k++, kiter = kiter->next) {
+					int x = kiter->x;
+					int y = kiter->y;
+					Points p;
+
+					p3pts.red = 0;
+					p3pts.blu = 0;
+					FindShaPoints(tree, x, y, &p3pts);
+
+					thismove.red = p1pts.red + p2pts.red + p3pts.red;
+					thismove.blu = p1pts.blu + p2pts.blu + p3pts.blu;
+
+					NewCandidateMove.p3 = '_';
+					NewCandidateMove.el3 = k;
+				}
+
+				tree = tree->Pop();
 			}
 
 			tree = tree->Pop();
 		}
-
-		for (j = 0, jiter = tree->sunEL; jiter->next; j++, jiter = jiter->next) {
-			int x = jiter->x;
-			int y = jiter->y;
-			Points p;
-
-			FindSunPoints(tree, x, y, &p);
-			thispiece.red = p.red;
-			thispiece.blu = p.blu;
-			NewCandidateMove.p2 = '*';
-			NewCandidateMove.el2 = j;
-
-			tree = tree->Push(tree);
-			tree->board[y][x] = '*';
-			UpdateEdgeLists(tree);
-
-			for (k = 0, kiter = tree->EL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-				Present pres;
-				pres.red = true;
-
-				FindRoofPoints(tree, x, y, &p, &pres);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = 'r';
-				NewCandidateMove.el3 = k;
-			}
-
-			for (k = 0, kiter = tree->sunEL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-
-				FindSunPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '*';
-				NewCandidateMove.el3 = k;
-			}
-
-			for (k = 0, kiter = tree->shaEL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-
-				FindShaPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '_';
-				NewCandidateMove.el3 = k;
-			}
-
-			tree = tree->Pop();
-		}
-
-		for (j = 0, jiter = tree->shaEL; jiter->next; j++, jiter = jiter->next) {
-			int x = jiter->x;
-			int y = jiter->y;
-			Points p;
-
-			FindShaPoints(tree, x, y, &p);
-			thispiece.red = p.red;
-			thispiece.blu = p.blu;
-			NewCandidateMove.p2 = '_';
-			NewCandidateMove.el2 = j;
-
-			tree = tree->Push(tree);
-			tree->board[y][x] = '_';
-			UpdateEdgeLists(tree);
-
-			for (k = 0, kiter = tree->EL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-				Present pres;
-				pres.red = true;
-
-				FindRoofPoints(tree, x, y, &p, &pres);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = 'r';
-				NewCandidateMove.el3 = k;
-			}
-
-			for (k = 0, kiter = tree->sunEL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-
-				FindSunPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '*';
-				NewCandidateMove.el3 = k;
-			}
-
-			for (k = 0, kiter = tree->shaEL; kiter->next; k++, kiter = kiter->next) {
-				int x = kiter->x;
-				int y = kiter->y;
-				Points p;
-
-				FindShaPoints(tree, x, y, &p);
-				thispiece.red = p.red;
-				thispiece.blu = p.blu;
-				NewCandidateMove.p3 = '_';
-				NewCandidateMove.el3 = k;
-			}
-
-			tree = tree->Pop();
-		}
-
-		tree = tree->Pop();
 	}
 }
 
