@@ -5,17 +5,17 @@
 
 char *StartingBoard[14] = {
 	"++++++++++++++",
+	"+...*........+",
+	"+.*rrbb***...+",
+	"+.*.._r*.....+",
+	"+.bbrb.......+",
+	"+...*........+",
+	"+...r........+",
+	"+..._........+",
+	"+..._........+",
+	"+..._........+",
 	"+............+",
-	"+.*r_.r***...+",
-	"+...bbr......+",
-	"+....*r..*...+",
-	"+....*b.*b...+",
-	"+._bb*b_b....+",
-	"+.....*br_...+",
-	"+.r.....*r...+",
-	"+.b......*...+",
-	"+.**.....*...+",
-	"+..bbbrrr*...+",
+	"+............+",
 	"+............+",
 	"++++++++++++++"
 };
@@ -153,20 +153,32 @@ public:
 	int scoredelta;
 	char p1;
 	int el1;
+	int x1;
+	int y1;
 	char p2;
 	int el2;
+	int x2;
+	int y2;
 	char p3;
 	int el3;
+	int x3;
+	int y3;
 };
 
 Move::Move() {
 	this->scoredelta = 0;
 	this->p1 = 'r';
 	this->el1 = 0;
+	this->x1 = 0;
+	this->y1 = 0;
 	this->p2 = '*';
 	this->el2 = 0;
+	this->x2 = 0;
+	this->y2 = 0;
 	this->p3 = '_';
 	this->el3 = 0;
+	this->x3 = 0;
+	this->y3 = 0;
 }
 
 Cursor *cursor = new Cursor;
@@ -320,12 +332,22 @@ void FindShaPoints(GameHistory *g, int x, int y, Points *p) {
 	pres.red = false;
 	pres.blu = false;
 	if (FindShaDouble(g, 'n', x, y, &pres)) {
-		bonuspts(&pres);
+		if (pres.red) {
+			p->red += 2;
+		}
+		if (pres.blu) {
+			p->blu += 2;
+		}
 	}
 	pres.red = false;
 	pres.blu = false;
 	if (FindShaDouble(g, 'e', x, y, &pres)) {
-		bonuspts(&pres);
+		if (pres.red) {
+			p->red += 2;
+		}
+		if (pres.blu) {
+			p->blu += 2;
+		}
 	}
 }
 
@@ -382,22 +404,42 @@ void FindSunPoints(GameHistory *g, int x, int y, Points *p) {
 	pres.red = false;
 	pres.blu = false;
 	if (FindSunDouble(g, 'n', x, y, &pres)) {
-		bonuspts(&pres);
+		if (pres.red) {
+			p->red += 2;
+		}
+		if (pres.blu) {
+			p->blu += 2;
+		}
 	}
 	pres.red = false;
 	pres.blu = false;
 	if (FindSunDouble(g, 'e', x, y, &pres)) {
-		bonuspts(&pres);
+		if (pres.red) {
+			p->red += 2;
+		}
+		if (pres.blu) {
+			p->blu += 2;
+		}
 	}
 	pres.red = false;
 	pres.blu = false;
 	if (FindSunDouble(g, 'w', x, y, &pres)) {
-		bonuspts(&pres);
+		if (pres.red) {
+			p->red += 2;
+		}
+		if (pres.blu) {
+			p->blu += 2;
+		}
 	}
 	pres.red = false;
 	pres.blu = false;
 	if (FindSunDouble(g, 's', x, y, &pres)) {
-		bonuspts(&pres);
+		if (pres.red) {
+			p->red += 2;
+		}
+		if (pres.blu) {
+			p->blu += 2;
+		}
 	}
 }
 
@@ -478,22 +520,42 @@ void FindRoofPoints(GameHistory *g, int x, int y, Points *p, Present *pres) {
 	tpres.red = pres->red;
 	tpres.blu = pres->blu;
 	if (FindRoofDouble(g, 'n', x, y, &tpres)) {
-		bonuspts(&tpres);
+		if (tpres.red) {
+			p->red += 2;
+		}
+		if (tpres.blu) {
+			p->blu += 2;
+		}
 	}
 	tpres.red = pres->red;
 	tpres.blu = pres->blu;
 	if (FindRoofDouble(g, 'e', x, y, &tpres)) {
-		bonuspts(&tpres);
+		if (tpres.red) {
+			p->red += 2;
+		}
+		if (tpres.blu) {
+			p->blu += 2;
+		}
 	}
 	tpres.red = pres->red;
 	tpres.blu = pres->blu;
 	if (FindRoofDouble(g, 'w', x, y, &tpres)) {
-		bonuspts(&tpres);
+		if (tpres.red) {
+			p->red += 2;
+		}
+		if (tpres.blu) {
+			p->blu += 2;
+		}
 	}
 	tpres.red = pres->red;
 	tpres.blu = pres->blu;
 	if (FindRoofDouble(g, 's', x, y, &tpres)) {
-		bonuspts(&tpres);
+		if (tpres.red) {
+			p->red += 2;
+		}
+		if (tpres.blu) {
+			p->blu += 2;
+		}
 	}
 }
 
@@ -589,10 +651,16 @@ void CheckP3Roofs(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove
 		if (scoredelta > CandidateMove->scoredelta) {
 			CandidateMove->p1 = NewCandidateMove->p1;
 			CandidateMove->el1 = NewCandidateMove->el1;
+			CandidateMove->x1 = NewCandidateMove->x1;
+			CandidateMove->y1 = NewCandidateMove->y1;
 			CandidateMove->p2 = NewCandidateMove->p2;
 			CandidateMove->el2 = NewCandidateMove->el2;
+			CandidateMove->x2 = NewCandidateMove->x2;
+			CandidateMove->y2 = NewCandidateMove->y2;
 			CandidateMove->p3 = 'r';
 			CandidateMove->el3 = k;
+			CandidateMove->x3 = x;
+			CandidateMove->y3 = y;
 			CandidateMove->scoredelta = scoredelta;
 		}
 	}
@@ -616,10 +684,16 @@ void CheckP3Suns(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove,
 		if (scoredelta > CandidateMove->scoredelta) {
 			CandidateMove->p1 = NewCandidateMove->p1;
 			CandidateMove->el1 = NewCandidateMove->el1;
+			CandidateMove->x1 = NewCandidateMove->x1;
+			CandidateMove->y1 = NewCandidateMove->y1;
 			CandidateMove->p2 = NewCandidateMove->p2;
 			CandidateMove->el2 = NewCandidateMove->el2;
+			CandidateMove->x2 = NewCandidateMove->x2;
+			CandidateMove->y2 = NewCandidateMove->y2;
 			CandidateMove->p3 = '*';
 			CandidateMove->el3 = k;
+			CandidateMove->x3 = x;
+			CandidateMove->y3 = y;
 			CandidateMove->scoredelta = scoredelta;
 		}
 	}
@@ -643,10 +717,16 @@ void CheckP3Shas(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove,
 		if (scoredelta > CandidateMove->scoredelta) {
 			CandidateMove->p1 = NewCandidateMove->p1;
 			CandidateMove->el1 = NewCandidateMove->el1;
+			CandidateMove->x1 = NewCandidateMove->x1;
+			CandidateMove->y1 = NewCandidateMove->y1;
 			CandidateMove->p2 = NewCandidateMove->p2;
 			CandidateMove->el2 = NewCandidateMove->el2;
+			CandidateMove->x2 = NewCandidateMove->x2;
+			CandidateMove->y2 = NewCandidateMove->y2;
 			CandidateMove->p3 = '_';
 			CandidateMove->el3 = k;
+			CandidateMove->x3 = x;
+			CandidateMove->y3 = y;
 			CandidateMove->scoredelta = scoredelta;
 		}
 	}
@@ -667,6 +747,8 @@ void CheckP2Roofs(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove
 		pres.red = true;
 
 		NewCandidateMove->el2 = j;
+		NewCandidateMove->x2 = x;
+		NewCandidateMove->y2 = y;
 
 		p2pts.red = 0;
 		p2pts.blu = 0;
@@ -684,7 +766,7 @@ void CheckP2Roofs(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove
 	}
 }
 
-void CheckP2Suns(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove, int i, PointList *iiter, Points *p1pts) {
+void CheckP2Suns(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove, Points *p1pts) {
 	int j = 0;
 	PointList *jiter = nullptr;
 	Points p2pts;
@@ -695,6 +777,8 @@ void CheckP2Suns(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove,
 		int y = jiter->y;
 
 		NewCandidateMove->el2 = j;
+		NewCandidateMove->x2 = x;
+		NewCandidateMove->y2 = y;
 
 		p2pts.red = 0;
 		p2pts.blu = 0;
@@ -712,7 +796,7 @@ void CheckP2Suns(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove,
 	}
 }
 
-void CheckP2Shas(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove, int i, PointList *iiter, Points *p1pts) {
+void CheckP2Shas(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove, Points *p1pts) {
 	int j = 0;
 	PointList *jiter = nullptr;
 	Points p2pts;
@@ -723,6 +807,8 @@ void CheckP2Shas(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove,
 		int y = jiter->y;
 
 		NewCandidateMove->el2 = j;
+		NewCandidateMove->x2 = x;
+		NewCandidateMove->y2 = y;
 
 		p2pts.red = 0;
 		p2pts.blu = 0;
@@ -735,6 +821,43 @@ void CheckP2Shas(GameHistory *tree, Move *CandidateMove, Move *NewCandidateMove,
 		CheckP3Roofs(tree, CandidateMove, NewCandidateMove, p1pts, &p2pts);
 		CheckP3Suns(tree, CandidateMove, NewCandidateMove, p1pts, &p2pts);
 		CheckP3Shas(tree, CandidateMove, NewCandidateMove, p1pts, &p2pts);
+
+		tree = tree->Pop();
+	}
+}
+
+void DoCompMove2(GameHistory *g) {
+	GameHistory *tree = g;
+	int i = 0;
+	PointList *iiter = nullptr;
+	Points p1pts;
+
+	Move CandidateMove;
+	Move NewCandidateMove;
+
+	NewCandidateMove.p1 = 'r';
+	for (i = 0, iiter = tree->EL; iiter->next; i++, iiter = iiter->next) {
+		int x = iiter->x;
+		int y = iiter->y;
+		Present pres;
+		pres.blu = false;
+		pres.red = true;
+
+		NewCandidateMove.el1 = i;
+		NewCandidateMove.x1 = x;
+		NewCandidateMove.y1 = y;
+
+		p1pts.red = 0;
+		p1pts.blu = 0;
+		FindRoofPoints(tree, x, y, &p1pts, &pres);
+
+		tree = tree->Push(tree);
+		tree->board[y][x] = 'r';
+		UpdateEdgeLists(tree);
+
+		CheckP2Roofs(tree, &CandidateMove, &NewCandidateMove, &p1pts);
+		CheckP2Suns(tree, &CandidateMove, &NewCandidateMove, &p1pts);
+		CheckP2Shas(tree, &CandidateMove, &NewCandidateMove, &p1pts);
 
 		tree = tree->Pop();
 	}
@@ -1218,6 +1341,6 @@ void main()
 	p.blu = true;
 
 	UpdateEdgeLists(g);
-	DoCompMove(g);
+	DoCompMove2(g);
 }
 
