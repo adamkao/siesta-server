@@ -6,14 +6,14 @@
 char *StartingBoard[14] = {
 	"++++++++++++++",
 	"+...*........+",
-	"+.*rrbb***...+",
-	"+.*.._r*.....+",
+	"+.r.*........+",
+	"+.****r*.....+",
 	"+.bbrb.......+",
-	"+...*........+",
+	"+..rb_.......+",
 	"+...r........+",
-	"+..._........+",
-	"+..._........+",
-	"+............+",
+	"+...*r.......+",
+	"+...r*.......+",
+	"+..._r.......+",
 	"+............+",
 	"+............+",
 	"+............+",
@@ -853,6 +853,52 @@ void DoCompMove2(GameHistory *g) {
 
 		tree = tree->Push(tree);
 		tree->board[y][x] = 'r';
+		UpdateEdgeLists(tree);
+
+		CheckP2Roofs(tree, &CandidateMove, &NewCandidateMove, &p1pts);
+		CheckP2Suns(tree, &CandidateMove, &NewCandidateMove, &p1pts);
+		CheckP2Shas(tree, &CandidateMove, &NewCandidateMove, &p1pts);
+
+		tree = tree->Pop();
+	}
+	NewCandidateMove.p1 = '*';
+	for (i = 0, iiter = tree->sunEL; iiter->next; i++, iiter = iiter->next) {
+		int x = iiter->x;
+		int y = iiter->y;
+
+		NewCandidateMove.el1 = i;
+		NewCandidateMove.x1 = x;
+		NewCandidateMove.y1 = y;
+
+		p1pts.red = 0;
+		p1pts.blu = 0;
+		FindSunPoints(tree, x, y, &p1pts);
+
+		tree = tree->Push(tree);
+		tree->board[y][x] = '*';
+		UpdateEdgeLists(tree);
+
+		CheckP2Roofs(tree, &CandidateMove, &NewCandidateMove, &p1pts);
+		CheckP2Suns(tree, &CandidateMove, &NewCandidateMove, &p1pts);
+		CheckP2Shas(tree, &CandidateMove, &NewCandidateMove, &p1pts);
+
+		tree = tree->Pop();
+	}
+	NewCandidateMove.p1 = '_';
+	for (i = 0, iiter = tree->shaEL; iiter->next; i++, iiter = iiter->next) {
+		int x = iiter->x;
+		int y = iiter->y;
+
+		NewCandidateMove.el1 = i;
+		NewCandidateMove.x1 = x;
+		NewCandidateMove.y1 = y;
+
+		p1pts.red = 0;
+		p1pts.blu = 0;
+		FindShaPoints(tree, x, y, &p1pts);
+
+		tree = tree->Push(tree);
+		tree->board[y][x] = '_';
 		UpdateEdgeLists(tree);
 
 		CheckP2Roofs(tree, &CandidateMove, &NewCandidateMove, &p1pts);
