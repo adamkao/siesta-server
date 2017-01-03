@@ -3,6 +3,8 @@
 #include <string>
 #include <stdlib.h>
 
+using namespace std;
+
 char *StartingBoard[14] = {
 	"++++++++++++++",
 	"+...*........+",
@@ -94,20 +96,34 @@ GameHistory *GameHistory::Pop() {
 }
 
 void GameHistory::ShowBoard() {
-	printf("%s\n", this->board[0]);
-	printf("%s\n", this->board[1]);
-	printf("%s\n", this->board[2]);
-	printf("%s\n", this->board[3]);
-	printf("%s\n", this->board[4]);
-	printf("%s\n", this->board[5]);
-	printf("%s\n", this->board[6]);
-	printf("%s\n", this->board[7]);
-	printf("%s\n", this->board[8]);
-	printf("%s\n", this->board[9]);
-	printf("%s\n", this->board[10]);
-	printf("%s\n", this->board[11]);
-	printf("%s\n", this->board[12]);
-	printf("%s\n", this->board[13]);
+	cout << this->board[0];
+	cout << "\n";
+	cout << this->board[1];
+	cout << "\n";
+	cout << this->board[2];
+	cout << "\n";
+	cout << this->board[3];
+	cout << "\n";
+	cout << this->board[4];
+	cout << "\n";
+	cout << this->board[5];
+	cout << "\n";
+	cout << this->board[6];
+	cout << "\n";
+	cout << this->board[7];
+	cout << "\n";
+	cout << this->board[8];
+	cout << "\n";
+	cout << this->board[9];
+	cout << "\n";
+	cout << this->board[10];
+	cout << "\n";
+	cout << this->board[11];
+	cout << "\n";
+	cout << this->board[12];
+	cout << "\n";
+	cout << this->board[13];
+	cout << "\n";
 }
 class Cursor {
 public:
@@ -917,5 +933,14 @@ void main()
 
 	UpdateEdgeLists(g);
 	DoCompMove2(g);
+
+	cout << "Content-type:text/html\r\n\r\n";
+	cout << "<head>\n";
+	cout << "<title>Hello World - First CGI Program</title>\n";
+	cout << "</head>\n";
+	cout << "<body>\n";
+	g->ShowBoard();
+	cout << "</body>\n";
+	cout << "</html>\n";
 }
 
